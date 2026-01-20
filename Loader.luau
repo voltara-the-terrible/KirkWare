@@ -16,13 +16,13 @@ if (typeof(messagebox) ~= "function") then
 end;
 
 if (run_on_actor and getactors and getactors()[1] ~= nil) then
-    run_on_actor(getactors()[1], [[task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Chaddestcat/KirkWare/refs/heads/main/Games/OperationOne/Main.luau"))() end]]);
+    run_on_actor(getactors()[1], [[task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/voltara-the-terrible/KirkWare/refs/heads/main/Games/OperationOne/Main.luau"))() end]]);
 elseif (getfflag and setfflag) then
     if (getfflag("DebugRunParallelLuaOnMainThread") ~= "True") then
         setfflag("DebugRunParallelLuaOnMainThread", "True");
         return localplayer:Kick("KirkWear - [" .. executor .. "]\nrejoin and run KirkWear again");
     else
-       task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Chaddestcat/KirkWare/refs/heads/main/Games/OperationOne/Main.luau"))() end);
+       task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/voltara-the-terrible/KirkWare/refs/heads/main/Games/OperationOne/Main.luau"))() end);
     end;
 else
     return messagebox("missing [ setfflag & run_on_actor ] - unsupported executor", "KirkWear - [" .. executor .. "]", 48);
