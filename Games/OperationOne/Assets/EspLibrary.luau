@@ -37,7 +37,7 @@ local player_esp = {cache = {}} do
         end;
         
         table.insert(self.connections, model.AncestryChanged:Connect(function()
-            self:Destroy();
+            self:Remove();
         end));
         
         self.drawings["box"] = create_drawing("Square", {Visible = false, Thickness = 1, Color = Color3.fromRGB(255, 255, 255), Filled = false, ZIndex = 1});
