@@ -3,7 +3,7 @@ local local_player = players.LocalPlayer;
 local camera = workspace.CurrentCamera;
 local dirs = { Vector3.new(-1, -1, -1), Vector3.new(1, -1, -1), Vector3.new(-1, 1, -1), Vector3.new(1, 1, -1), Vector3.new(-1, -1, 1), Vector3.new(1, -1, 1), Vector3.new(-1, 1, 1), Vector3.new(1, 1, 1) };
 
-local world_to_screen = function(pos)
+local world_to_point = function(pos)
     local point, on = camera:WorldToViewportPoint(pos);
     return Vector2.new(point.X, point.Y), on, point.Z;
 end;
@@ -62,7 +62,7 @@ local player_esp = {cache = {}} do
     
     function player_esp:Update(settings)
         local head = self.children.head;
-        local _, on = world_to_screen(head.Position);
+        local _, on = world_to_point(head.Position);
         if (not on) then return self:HideDrawings() end;
         
         local top, bottom, left, right = self:GetBoundingBox();
@@ -101,28 +101,27 @@ local player_esp = {cache = {}} do
     end;
     
     function player_esp:GetBoundingBox()
-        local cf, size = self.model:GetBoundingBox();
-        size = vector.clamp(size, Vector3.new(), Vector3.new(4.5, 8.5, 4.5));
-        cf = CFrame.new(self.children.torso.Position - Vector3.new(0, 1, 0));
-        local sx, sy, sz = size.X * 0.5, size.Y * 0.5, size.Z * 0.5;
-        
         local top, bottom, left, right = math.huge, -math.huge, math.huge, -math.huge;
         local yay = false;
-        
-        for i = 1, 8 do
-            local d = dirs[i];
-            local point, on = world_to_screen(cf * Vector3.new(d.X * sx, d.Y * sy, d.Z * sz));
-            if (on) then
-                yay = true;
-                if (point.Y < top) then top = point.Y end;
-                if (point.Y > bottom) then bottom = point.Y end;
-                if (point.X < left) then left = point.X end;
-                if (point.X > right) then right = point.X end;
+
+        for _, part in next, (self.Bodyparts) do
+            if (typeof(part) == "Basepart") then
+                local size = part.Size * 0.5;
+                for i = 1, #dirs do
+                    dir = dirs[i];
+                    local point, on = world_to_point(part.CFrame * Vector3.new(dir.X * size.X, dir.Y * size.Y, dir.Z * size.Z));
+                    if (on) then
+                        yay = true;
+                        top = math.min(top, point.Y);
+                        bottom = math.max(bottom, point.Y);
+                        left = math.min(left, point.X);
+                        right = math.max(right, point.X);
+                    end;
+                end;
             end;
         end;
-    
+
         if (not yay or left >= right or top >= bottom) then return nil end;
-    
         return top, bottom, left, right;
     end;
 
