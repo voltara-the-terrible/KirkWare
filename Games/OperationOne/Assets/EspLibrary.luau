@@ -103,7 +103,7 @@ local player_esp = {cache = {}} do
     function player_esp:GetBoundingBox()
         local cf, size = self.model:GetBoundingBox();
         size = vector.clamp(size, Vector3.new(), Vector3.new(4.5, 8.5, 4.5));
-        cf = CFrame.new(self.children.torso.Position - Vector3.new(0, -0.5, 0));
+        cf = CFrame.new(self.children.torso.Position - Vector3.new(0, 2, 0));
         local sx, sy, sz = size.X * 0.5, size.Y * 0.5, size.Z * 0.5;
         
         local top, bottom, left, right = math.huge, -math.huge, math.huge, -math.huge;
