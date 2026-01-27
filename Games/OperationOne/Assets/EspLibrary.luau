@@ -55,8 +55,8 @@ local player_esp = {cache = {}} do
             self.connections[i]:Disconnect();
         end;
 
-        for i = 1, #self.drawings do
-            self.drawings[i]:Destroy();
+        for i, v in self.drawings do
+            v:Destroy();
         end;
     end;
     
