@@ -1,4 +1,5 @@
 local players = game:GetService("Players");
+local coregui = game:GetService("CoreGui");
 local local_player = players.LocalPlayer;
 local camera = workspace.CurrentCamera;
 local dirs = { Vector3.new(-1, -1, -1), Vector3.new(1, -1, -1), Vector3.new(-1, 1, -1), Vector3.new(1, 1, -1), Vector3.new(-1, -1, 1), Vector3.new(1, -1, 1), Vector3.new(-1, 1, 1), Vector3.new(1, 1, 1) };
@@ -27,13 +28,26 @@ local player_esp = {cache = {}} do
             ["connections"] = {},
             ["drawings"] = {},
             ["children"] = {},
-            ["distance"] = math.huge
+            ["adornments"] = {},
+            ["distance"] = math.huge,
+            ["chams_set"] = false
         }, player_esp);
         
         local children = model:GetChildren();
         for i = 1, #children do
             local v = children[i];
             self.children[v.Name] = v;
+            if (typeof(v) == "Instance" and v.ClassName == "Part") then
+                local adornment = Instance.new("BoxHandleAdornment", coregui);
+                adornment.Adornee = v;
+                adornment.Visible = false;
+                adornment.Size = v.Size;
+                adornment.AlwaysOnTop = false;
+                adornment.Transparency = -1;
+                adornment.Shading = Enum.AdornShading.XRayShaded;
+                adornment.Color3 = Color3.new(255, 255, 255);
+                table.insert(self.adornments, adornment);
+            end;
         end;
         
         table.insert(self.connections, model.AncestryChanged:Connect(function()
@@ -43,7 +57,6 @@ local player_esp = {cache = {}} do
         self.drawings["box"] = create_drawing("Square", {Visible = false, Thickness = 1, Color = Color3.fromRGB(255, 255, 255), Filled = false, ZIndex = 1});
         self.drawings["box_outline"] = create_drawing("Square", {Visible = false, Thickness = 2, Color = Color3.fromRGB(0, 0, 0), Filled = false, ZIndex = 0});
 
-    
         self.cache[model] = self;
         return self;
     end;
@@ -57,6 +70,10 @@ local player_esp = {cache = {}} do
 
         for i, v in self.drawings do
             v:Destroy();
+        end;
+        
+        for i = 1, #self.adornments do
+            self.adornments[i]:Destroy();
         end;
     end;
     
@@ -72,6 +89,7 @@ local player_esp = {cache = {}} do
         self.distance = distance;
         
         self:RenderBox(top, bottom, left, right, settings);
+        self:RenderChams(settings);
     end;
     
     function player_esp:RenderBox(top, bottom, left, right, settings)
@@ -94,9 +112,27 @@ local player_esp = {cache = {}} do
         drawings.box_outline.Size = size;
     end;
     
+    function player_esp:RenderChams(settings)
+        if (not settings.chams and not self.chams_set) then
+            self.chams_set = true;
+            for i = 1, #self.adornments do
+                self.adornments[i].Visible = false;
+            end;
+        end;
+        
+        self.chams_set = false;
+        for i = 1, #self.adornments do
+            self.adornments[i].Visible = true;
+        end;
+    end;
+    
     function player_esp:HideDrawings()
         for i, v in self.drawings do
             v.Visible = false;
+        end;
+        
+        for i = 1, #self.adornments do
+            self.adornments[i].Visible = false;
         end;
     end;
     
