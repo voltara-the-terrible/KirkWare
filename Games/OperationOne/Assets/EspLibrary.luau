@@ -132,15 +132,14 @@ local player_esp = {cache = {}} do
             return;
         end;
         
-        local pos = Vector2.new(left - 2, top - 2);
         local size = Vector2.new((right - left) + 2 * 2, (bottom - top) + 2 * 2);
 
         drawings.box.Visible = true;
-        drawings.box.Position = pos;
+        drawings.box.Position = Vector2.new(left - 2, top - 2);
         drawings.box.Size = size;
 
         drawings.box_outline.Visible = true;
-        drawings.box_outline.Position = pos;
+        drawings.box_outline.Position = Vector2.new(left - 4, top - 4);
         drawings.box_outline.Size = size;
     end;
     
@@ -165,7 +164,7 @@ local player_esp = {cache = {}} do
         end;
 
         drawings.distance.Visible = true;
-        drawings.distance.Text = self.distance .. "st";
+        drawings.distance.Text = math.floor(self.distance / 3) .. "m";
         drawings.distance.Position = Vector2.new((left + right) / 2, bottom +  (settings.weapon and 9 or 0));
     end;
     
