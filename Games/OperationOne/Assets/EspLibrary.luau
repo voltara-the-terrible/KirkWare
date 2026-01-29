@@ -81,7 +81,7 @@ local player_esp = {cache = {}} do
         end));
         
         self.drawings["box"] = create_drawing("Square", {Visible = false, Thickness = 1, Color = Color3.fromRGB(255, 255, 255), Filled = false, ZIndex = 1});
-        self.drawings["box_outline"] = create_drawing("Square", {Visible = false, Thickness = 2, Color = Color3.fromRGB(0, 0, 0), Filled = false, ZIndex = 0});
+        self.drawings["box_outline"] = create_drawing("Square", {Visible = false, Thickness = 3, Color = Color3.fromRGB(0, 0, 0), Filled = false, ZIndex = 0});
         self.drawings["distance"] = create_drawing("Text", {Visible = false, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Color = Color3.fromRGB(255, 255, 255), Transparency = 1, Size = 10, Text = "0", Font = 2, ZIndex = 1});
         self.drawings["weapon"] = create_drawing("Text", {Visible = false, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Color = Color3.fromRGB(255, 255, 255), Transparency = 1, Size = 10, Text = "None", Font = 2, ZIndex = 1});
         self.drawings["name"] = create_drawing("Text", {Visible = false, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Color = Color3.fromRGB(255, 255, 255), Transparency = 1, Size = 10, Text = name, Font = 2, ZIndex = 1});
@@ -165,7 +165,7 @@ local player_esp = {cache = {}} do
         end;
 
         drawings.distance.Visible = true;
-        drawings.distance.Text = ("[" .. self.distance .. "]");
+        drawings.distance.Text = self.distance .. "st";
         drawings.distance.Position = Vector2.new((left + right) / 2, bottom +  (settings.weapon and 9 or 0));
     end;
     
