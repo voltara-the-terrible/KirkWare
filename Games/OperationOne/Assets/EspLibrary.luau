@@ -231,20 +231,4 @@ local player_esp = {cache = {}} do
 
 end;
 
-local runservice = game:GetService("RunService");
-task.spawn(function()
-    while (task.wait(1)) do
-        local children = workspace.Viewmodels:GetChildren()
-        for i = 1, #children do
-            player_esp.new(children[i]);
-        end;
-    end;    
-end);
-
-runservice.PreRender:Connect(function()
-    for i, v in pairs(player_esp.cache) do
-        v:Update({box = true, chams = true, weapon = true, distance = true, name = true});
-    end;
-end);
-
 return player_esp;
