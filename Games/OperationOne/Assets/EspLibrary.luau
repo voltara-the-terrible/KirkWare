@@ -32,7 +32,6 @@ local get_name_and_humainod = function(model)
 end;
 
 local is_teammate = function(model)
-task.wait(0.5)
     local highlights = workspace:QueryDescendants([==[ Highlight #PlayerHighlight ]==]);
     for i = 1, #highlights do
         local v = highlights[i];
