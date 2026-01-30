@@ -46,6 +46,7 @@ local player_esp = {cache = {}} do
     player_esp.__index = player_esp;
     
     player_esp.new = function(model)
+task.wait(1)
         if (player_esp.cache[model] or model.head.Transparency > 0.8 or model.Name == "LocalViewmodel" or is_teammate(model)) then return end;
         local name, humanoid = get_name_and_humainod(model);
         if (not humanoid) then return end;
