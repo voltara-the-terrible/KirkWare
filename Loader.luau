@@ -5,7 +5,7 @@ local localplayer = cloneref(players.LocalPlayer);
 
 local executor = string.reverse(identifyexecutor and identifyexecutor()) or "what are you useing????";
 
-if (run_on_actor and getactors and getactors()[1] ~= nil and not table.find({"Delta", "Codex"}, string.reverse(executor))) then
+if (run_on_actor and getactors and getactors()[1] ~= nil and not table.find({"Delta", "Codex", "Wave"}, string.reverse(executor))) then
     run_on_actor(getactors()[1], [[task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/voltara-the-terrible/Assembly/refs/heads/main/Games/OperationOne/Main.luau"))() end]]);
 elseif (getfflag and setfflag) then
     if (string.lower(tostring(getfflag("DebugRunParallelLuaOnMainThread"))) ~= "true") then
