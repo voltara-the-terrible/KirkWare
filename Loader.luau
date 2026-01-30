@@ -3,11 +3,6 @@ if (not game:IsLoaded()) then game.Loaded:Wait() end;
 local players = cloneref(game:GetService("Players"));
 local localplayer = cloneref(players.LocalPlayer);
 
-if (not localplayer) then
-	players:GetPropertyChangedSignal("LocalPlayer"):Wait();
-	localplayer = players.LocalPlayer;
-end;
-
 local executor = string.reverse(identifyexecutor and identifyexecutor()) or "what are you useing????";
 
 if (run_on_actor and getactors and getactors()[1] ~= nil and not table.find({"Delta", "Codex"}, string.reverse(executor))) then
