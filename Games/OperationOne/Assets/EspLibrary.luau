@@ -49,7 +49,7 @@ local player_esp = {cache = {}} do
         if (player_esp.cache[model] or model.head.Transparency > 0.8 or model.Name == "LocalViewmodel" or is_teammate(model)) then return end;
         local name, humanoid = get_name_and_humainod(model);
         if (not humanoid) then return end;
-        if (f) then f(model) end;
+        if (f) then f(model, true) end;
 
         local self = setmetatable({
             ["model"] = model,
@@ -95,7 +95,8 @@ local player_esp = {cache = {}} do
     
     function player_esp:Remove()
         self.cache[self.model] = nil;
-        
+        if (f) then f(model, false) end;
+
         for i = 1, #self.connections do
             self.connections[i]:Disconnect();
         end;
