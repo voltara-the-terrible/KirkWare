@@ -59,7 +59,8 @@ local player_esp = {cache = {}} do
             ["adornments"] = {},
             ["distance"] = math.huge,
             ["on_screen"] = false,
-            ["screen_pos"] = Vector2.new(math.huge, math.huge)
+            ["screen_pos"] = Vector2.new(math.huge, math.huge),
+["f"] = f
         }, player_esp);
         
         local children = model:GetChildren();
@@ -95,7 +96,7 @@ local player_esp = {cache = {}} do
     
     function player_esp:Remove()
         self.cache[self.model] = nil;
-        if (f) then f(model, false) end;
+        if (self.f) then self.f(model, false) end;
 
         for i = 1, #self.connections do
             self.connections[i]:Disconnect();
