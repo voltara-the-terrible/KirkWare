@@ -38,6 +38,7 @@ local player_esp = {cache = {}} do
         for i = 1, #children do
             local v = children[i];
             self.children[v.Name] = v;
+            print(v.Name)
         end;
         
         table.insert(self.connections, model.AncestryChanged:Connect(function()
