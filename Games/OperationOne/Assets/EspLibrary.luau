@@ -9,6 +9,18 @@ local world_to_point = function(pos)
     return Vector2.new(point.X, point.Y), on, point.Z;
 end;
 
+local is_teammate = function(model)
+    local highlights = workspace:QueryDescendants([==[ Highlight #PlayerHighlight ]==]);
+    for i = 1, #highlights do
+        local v = highlights[i];
+        if (v.Adornee == model and v.FillColor == Color3.fromRGB(0, 150, 0)) then
+            return true;
+        end;
+    end;
+    return false;
+end;
+
+
 local create_drawing = function(type, props)
     local a = Drawing.new(type);
     for i, v in next, (props) do
@@ -32,7 +44,7 @@ local player_esp = {cache = {}} do
             ["distance"] = math.huge,
             ["on_screen"] = false,
             ["screen_pos"] = Vector2.new(math.huge, math.huge),
-            ["teammate"] = (char:GetAttribute("Team") == local_player.Team);
+            ["teammate"] = is_teammate(model)
         }, player_esp);
         
         local children = model:GetChildren();
