@@ -29,9 +29,9 @@ local create_drawing = function(type, props)
     return a;
 end;
 
-local player_esp = {cache = {}} do
+local player_esp = {} do
     player_esp.__index = player_esp;
-    
+    player_esp.cache = {}
     player_esp.new = function(model, char)
         if (player_esp.cache[model]) then return end;
                 
@@ -88,7 +88,7 @@ local player_esp = {cache = {}} do
         local point, on = world_to_point(head.Position);
         self.screen_pos = point;
         self.on_screen = on;
-
+        print(self.teammate)
         if (not on or not settings.enabled or (not settings.teammates and self.teammate)) then return self:Hidedrawings() end;
         
         local top, bottom, left, right = self:GetBoundingBox();
