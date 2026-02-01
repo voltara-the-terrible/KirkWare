@@ -2039,7 +2039,7 @@ do
 			Addons = {},
 			Risky = Info.Risky,
 		};
-		Library.Flags[Idx] = Toggle.Vaule
+		Library.Flags[Idx] = Toggle.Value
 		local Groupbox = self;
 		local Container = Groupbox.Container;
 
@@ -2139,7 +2139,7 @@ do
 					Addon:Update()
 				end
 			end
-			Library.Flags[Idx] = Toggle.Vaule
+			Library.Flags[Idx] = Toggle.Value
 			Library:SafeCallback(Toggle.Callback, Toggle.Value);
 			Library:SafeCallback(Toggle.Changed, Toggle.Value);
 			Library:UpdateDependencyBoxes();
