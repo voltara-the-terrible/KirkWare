@@ -17,40 +17,12 @@ local create_drawing = function(type, props)
     return a;
 end;
 
-local get_name_and_humainod = function(model)
-    local plrs = players:GetPlayers();
-    for i = 1, #plrs do
-        local plr = plrs[i];
-        local char = plr.Character;
-        if (char and char:WaitForChild("HumanoidRootPart", 4)) then
-            if ((char.HumanoidRootPart.Position - model.torso.Position).Magnitude < 5) then
-                return plr.Name, char.Humanoid;
-            end;
-        end;
-    end;
-    return "", nil;
-end;
-
-local is_teammate = function(model)
-    local highlights = workspace:QueryDescendants([==[ Highlight #PlayerHighlight ]==]);
-    for i = 1, #highlights do
-        local v = highlights[i];
-        if (v.Adornee == model and v.FillColor == Color3.fromRGB(0, 150, 0)) then
-            return true;
-        end;
-    end;
-    return false;
-end;
-
 local player_esp = {cache = {}} do
     player_esp.__index = player_esp;
     
-    player_esp.new = function(model, f)
-        if (player_esp.cache[model] or model.head.Transparency > 0.8 or model.Name == "LocalViewmodel" or is_teammate(model)) then return end;
-        local name, humanoid = get_name_and_humainod(model);
-        if (not humanoid) then return end;
-        if (f) then f(model, true) end;
-
+    player_esp.new = function(model, char)
+        if (player_esp.cache[model]) then return end;
+                
         local self = setmetatable({
             ["model"] = model,
             ["connections"] = {},
@@ -66,17 +38,6 @@ local player_esp = {cache = {}} do
         for i = 1, #children do
             local v = children[i];
             self.children[v.Name] = v;
-            if (typeof(v) == "Instance" and v.ClassName == "Part") then
-                local adornment = Instance.new("BoxHandleAdornment", coregui);
-                adornment.Adornee = v;
-                adornment.Visible = false;
-                adornment.Size = v.Size;
-                adornment.AlwaysOnTop = false;
-                adornment.Transparency = -1;
-                adornment.Shading = Enum.AdornShading.XRayShaded;
-                adornment.Color3 = Color3.new(255, 255, 255);
-                table.insert(self.adornments, adornment);
-            end;
         end;
         
         table.insert(self.connections, model.AncestryChanged:Connect(function()
@@ -85,18 +46,14 @@ local player_esp = {cache = {}} do
         
         self.drawings["box"] = create_drawing("Square", {Visible = false, Thickness = 1, Color = Color3.fromRGB(255, 255, 255), Filled = false, ZIndex = 1});
         self.drawings["box_outline"] = create_drawing("Square", {Visible = false, Thickness = 3, Color = Color3.fromRGB(0, 0, 0), Filled = false, ZIndex = 0});
-        self.drawings["distance"] = create_drawing("Text", {Visible = false, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Color = Color3.fromRGB(255, 255, 255), Transparency = 1, Size = 10, Text = "0", Font = 2, ZIndex = 1});
-        self.drawings["weapon"] = create_drawing("Text", {Visible = false, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Color = Color3.fromRGB(255, 255, 255), Transparency = 1, Size = 10, Text = "None", Font = 2, ZIndex = 1});
-        self.drawings["name"] = create_drawing("Text", {Visible = false, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Color = Color3.fromRGB(255, 255, 255), Transparency = 1, Size = 10, Text = name, Font = 2, ZIndex = 1});
-
+        
         self.cache[model] = self;
         return self;
     end;
     
     function player_esp:Remove()
         self.cache[self.model] = nil;
-        if (f) then f(self.model, false) end;
-
+        
         for i = 1, #self.connections do
             self.connections[i]:Disconnect();
         end;
@@ -124,10 +81,6 @@ local player_esp = {cache = {}} do
         self.distance = distance;
         
         self:RenderBox(top, bottom, left, right, settings);
-        self:RenderChams(settings);
-        self:RenderDistance(top, bottom, left, right, settings);
-        self:RenderWeapon(top, bottom, left, right, settings);
-        self:RenderName(top, bottom, left, right, settings)
     end;
     
     function player_esp:RenderBox(top, bottom, left, right, settings)
@@ -138,6 +91,7 @@ local player_esp = {cache = {}} do
             return;
         end;
         
+        drawing.box.Color = settings.box_color;
         drawings.box.Visible = true;
         drawings.box.Position = Vector2.new(left - 2, top - 2);
         drawings.box.Size = Vector2.new((right - left) + 2 * 2, (bottom - top) + 2 * 2);
@@ -145,59 +99,6 @@ local player_esp = {cache = {}} do
         drawings.box_outline.Visible = true;
         drawings.box_outline.Position = Vector2.new(left - 3, top - 3);
         drawings.box_outline.Size = Vector2.new((right - left) + 3 * 2, (bottom - top) + 3 * 2);
-    end;
-    
-    function player_esp:RenderChams(settings)
-        if (not settings.chams) then
-            for i = 1, #self.adornments do
-                self.adornments[i].Visible = false;
-            end;
-            return;
-        end;
-        
-        for i = 1, #self.adornments do
-            self.adornments[i].Visible = true;
-        end;
-    end;
-    
-    function player_esp:RenderDistance(top, bottom, left, right, settings)
-        local drawings = self.drawings;
-        if (not settings.distance) then
-            drawings.distance.Visible = false;
-            return;
-        end;
-
-        drawings.distance.Visible = true;
-        drawings.distance.Text = math.floor(self.distance/3) .. "m";
-        drawings.distance.Position = Vector2.new((left + right) / 2, bottom +  (settings.weapon and 9 or 0));
-    end;
-    
-    function player_esp:RenderWeapon(top, bottom, left, right, settings)
-        local drawings = self.drawings;
-        if (not settings.weapon) then
-            drawings.weapon.Visible = false;
-            return;
-        end;
-
-        drawings.weapon.Visible = true;
-        drawings.weapon.Text = self:GetWeapon();
-        drawings.weapon.Position = Vector2.new((left + right) / 2, bottom);
-    end;
-    
-    function player_esp:RenderName(top, bottom, left, right, settings)
-        local drawings = self.drawings;
-        if (not settings.name) then
-            drawings.name.Visible = false;
-            return;
-        end;
-
-        drawings.name.Visible = true;
-        drawings.name.Position = Vector2.new((left + right) / 2, top - (drawings.name.Size + 1));
-    end;
-
-    function player_esp:GetWeapon()
-        local wep = self.model:QueryDescendants([==[ Configuration #Gun ]==])[1];
-        return (wep and wep.Parent.Name or "None");
     end;
     
     function player_esp:Hidedrawings()
