@@ -76,6 +76,7 @@ local player_esp = {cache = {}} do
         local point, on = world_to_point(head.Position);
         self.screen_pos = point;
         self.on_screen = on;
+        print(self.teammate)
         if (not on or not settings.enabled or (not settings.teammates and self.teammate)) then return self:Hidedrawings() end;
         
         local top, bottom, left, right = self:GetBoundingBox();
@@ -83,6 +84,9 @@ local player_esp = {cache = {}} do
         local distance = math.floor((camera.CFrame.Position - head.Position).Magnitude);
         
         self.distance = distance;
+        self:RenderDistance(top, bottom, left, right, settings);
+        self:RenderWeapon(top, bottom, left, right, settings);
+        self:RenderName(top, bottom, left, right, settings);
         self:RenderBox(top, bottom, left, right, settings);
     end;
     
