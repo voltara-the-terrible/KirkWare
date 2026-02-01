@@ -49,7 +49,7 @@ local player_esp = {cache = {}} do
         self.drawings["box_outline"] = create_drawing("Square", {Visible = false, Thickness = 3, Color = Color3.fromRGB(0, 0, 0), Filled = false, ZIndex = 0});
         self.drawings["distance"] = create_drawing("Text", {Visible = false, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Color = Color3.fromRGB(255, 255, 255), Transparency = 1, Size = 10, Text = "0", Font = 2, ZIndex = 1});
         self.drawings["weapon"] = create_drawing("Text", {Visible = false, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Color = Color3.fromRGB(255, 255, 255), Transparency = 1, Size = 10, Text = "None", Font = 2, ZIndex = 1});
-        self.drawings["name"] = create_drawing("Text", {Visible = false, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Color = Color3.fromRGB(255, 255, 255), Transparency = 1, Size = 10, Text = name, Font = 2, ZIndex = 1});
+        self.drawings["name"] = create_drawing("Text", {Visible = false, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Color = Color3.fromRGB(255, 255, 255), Transparency = 1, Size = 10, Text = char.Name, Font = 2, ZIndex = 1});
 
         self.cache[model] = self;
         return self;
@@ -144,6 +144,11 @@ local player_esp = {cache = {}} do
         drawings.distance.Visible = true;
         drawings.distance.Text = math.floor(self.distance/3) .. "m";
         drawings.distance.Position = Vector2.new((left + right) / 2, bottom +  (settings.weapon and 9 or 0));
+    end;
+
+    function player_esp:GetWeapon()
+        local wep = self.model:QueryDescendants([==[ Configuration #Gun ]==])[1];
+        return (wep and wep.Parent.Name or "None");
     end;
 
     function player_esp:Hidedrawings()
