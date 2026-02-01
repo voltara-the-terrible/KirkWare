@@ -38,7 +38,6 @@ local player_esp = {cache = {}} do
         for i = 1, #children do
             local v = children[i];
             self.children[v.Name] = v;
-            print(v.Name)
         end;
         
         table.insert(self.connections, model.AncestryChanged:Connect(function()
@@ -80,7 +79,6 @@ local player_esp = {cache = {}} do
         local distance = math.floor((camera.CFrame.Position - head.Position).Magnitude);
         
         self.distance = distance;
-        
         self:RenderBox(top, bottom, left, right, settings);
     end;
     
@@ -92,7 +90,7 @@ local player_esp = {cache = {}} do
             return;
         end;
         
-        drawing.box.Color = settings.box_color;
+        drawings.box.Color = settings.box_color;
         drawings.box.Visible = true;
         drawings.box.Position = Vector2.new(left - 2, top - 2);
         drawings.box.Size = Vector2.new((right - left) + 2 * 2, (bottom - top) + 2 * 2);
