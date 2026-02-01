@@ -744,6 +744,690 @@ do
 		local HueCursor = Library:Create('Frame', { 
 			BackgroundColor3 = Color3.new(1, 1, 1);
 			AnchorPoint = Vector2.new(0, 0.5);
+			BorderColor3 = Color3.new(0, 0, 0)	DevicePlatform = Enum.Platform.None;
+	CanDrag = true;
+	CantDragForced = true;
+	ShowCustomCursor = false; 
+	VideoLink = "";
+	TotalTabs = 0;
+	Flags = {};
+};
+
+pcall(function() Library.DevicePlatform = InputService:GetPlatform(); end); -- For safety so the UI library doesn't error.
+Library.IsMobile = (Library.DevicePlatform == Enum.Platform.Android or Library.DevicePlatform == Enum.Platform.IOS);
+
+if Library.IsMobile then
+	Library.MinSize = Vector2.new(350, 475); -- Make UI little bit smaller.
+end
+
+local RainbowStep = 0
+local Hue = 0
+
+table.insert(Library.Signals, RenderStepped:Connect(function(Delta)
+	RainbowStep = RainbowStep + Delta
+
+	if RainbowStep >= (1 / 60) then
+		RainbowStep = 0;
+
+		Hue = Hue + (1 / 400);
+
+		if Hue > 1 then
+			Hue = 0;
+		end;
+
+		Library.CurrentRainbowHue = Hue;
+		Library.CurrentRainbowColor = Color3.fromHSV(Hue, 0.8, 1);
+	end;
+end));
+
+local function GetPlayersString()
+	local PlayerList = Players:GetPlayers();
+
+	for i = 1, #PlayerList do
+		PlayerList[i] = PlayerList[i].Name;
+	end;
+
+	table.sort(PlayerList, function(str1, str2) return str1 < str2 end);
+
+	return PlayerList;
+end;
+
+local function GetTeamsString()
+	local TeamList = Teams:GetTeams();
+
+	for i = 1, #TeamList do
+		TeamList[i] = TeamList[i].Name;
+	end;
+
+	table.sort(TeamList, function(str1, str2) return str1 < str2 end);
+	
+	return TeamList;
+end;
+
+function Library:SafeCallback(f, ...)
+	if (not f) then
+		return;
+	end;
+
+	if not Library.NotifyOnError then
+		return f(...);
+	end;
+
+	local success, event = pcall(f, ...);
+
+	if not success then
+		local _, i = event:find(":%d+: ");
+
+		if not i then
+			return Library:Notify(event);
+		end;
+
+		return Library:Notify(event:sub(i + 1), 3);
+	end;
+end;
+
+function Library:AttemptSave()
+	if Library.SaveManager then
+		Library.SaveManager:Save();
+	end;
+end;
+
+function Library:Create(Class, Properties)
+	local _Instance = Class;
+
+	if type(Class) == 'string' then
+		_Instance = Instance.new(Class);
+	end;
+
+	for Property, Value in next, Properties do
+		_Instance[Property] = Value;
+	end;
+
+	return _Instance;
+end;
+
+function Library:ApplyTextStroke(Inst)
+	Inst.TextStrokeTransparency = 1;
+
+	Library:Create('UIStroke', {
+		Color = Color3.new(0, 0, 0);
+		Thickness = 1;
+		LineJoinMode = Enum.LineJoinMode.Miter;
+		Parent = Inst;
+	});
+end;
+
+function Library:CreateLabel(Properties, IsHud)
+	local _Instance = Library:Create('TextLabel', {
+		BackgroundTransparency = 1;
+		Font = Library.Font;
+		TextColor3 = Library.FontColor;
+		TextSize = 16;
+		TextStrokeTransparency = 0;
+	});
+
+	Library:ApplyTextStroke(_Instance);
+
+	Library:AddToRegistry(_Instance, {
+		TextColor3 = 'FontColor';
+	}, IsHud);
+
+	return Library:Create(_Instance, Properties);
+end;
+
+function Library:MakeDraggable(Instance, Cutoff)
+	Instance.Active = true;
+
+	Instance.InputBegan:Connect(function(Input)
+		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			local ObjPos = Vector2.new(
+				Mouse.X - Instance.AbsolutePosition.X,
+				Mouse.Y - Instance.AbsolutePosition.Y
+			);
+
+			if ObjPos.Y > (Cutoff or 40) then
+				return;
+			end;
+
+			while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+				Instance.Position = UDim2.new(
+					0,
+					Mouse.X - ObjPos.X + (Instance.Size.X.Offset * Instance.AnchorPoint.X),
+					0,
+					Mouse.Y - ObjPos.Y + (Instance.Size.Y.Offset * Instance.AnchorPoint.Y)
+				);
+
+				RenderStepped:Wait();
+			end;
+		end;
+	end);
+
+	if Library.IsMobile then
+		local Dragging, DraggingInput, DraggingStart, StartPosition;
+
+		InputService.TouchStarted:Connect(function(Input)
+			if Library.CantDragForced == true then
+				Dragging = false
+				return;
+			end
+			if not Dragging and Library:MouseIsOverFrame(Instance, Input) and Library.Window.Holder.Visible == true then
+				DraggingInput = Input;
+				DraggingStart = Input.Position;
+				StartPosition = Instance.Position;
+
+				local OffsetPos = Input.Position - DraggingStart;
+				if OffsetPos.Y > (Cutoff or 40) then
+					Dragging = false;
+					return;
+				end;
+
+				Dragging = true;
+			end;
+		end);
+		InputService.TouchMoved:Connect(function(Input)
+			if Library.CantDragForced == true then
+				Dragging = false;
+				return;
+			end
+			if Input == DraggingInput and Dragging and Library.CanDrag == true and Library.Window.Holder.Visible == true then
+				local OffsetPos = Input.Position - DraggingStart;
+
+				Instance.Position = UDim2.new(
+					StartPosition.X.Scale,
+					StartPosition.X.Offset + OffsetPos.X,
+					StartPosition.Y.Scale,
+					StartPosition.Y.Offset + OffsetPos.Y
+				);
+			end;
+		end);
+		InputService.TouchEnded:Connect(function(Input)
+			if Input == DraggingInput then 
+				Dragging = false;
+			end;
+		end);
+	end;
+end;
+
+function Library:MakeResizable(Instance, MinSize)
+	if Library.IsMobile then
+		return;
+	end;
+
+	Instance.Active = true;
+	
+	local ResizerImage_Size = 25;
+	local ResizerImage_HoverTransparency = 0.5;
+
+	local Resizer = Library:Create('Frame', {
+		SizeConstraint = Enum.SizeConstraint.RelativeXX;
+		BackgroundColor3 = Color3.new(0, 0, 0);
+		BackgroundTransparency = 1;
+		BorderSizePixel = 0;
+		Size = UDim2.new(0, 30, 0, 15);
+		Position = UDim2.new(1, -30, 1, -30);
+		Visible = true;
+		ClipsDescendants = true;
+		ZIndex = 1;
+		Parent = Instance;--Library.ScreenGui;
+	});
+
+	local ResizerImage = Library:Create('ImageButton', {
+		BackgroundColor3 = Library.AccentColor;
+		BackgroundTransparency = 1;
+		BorderSizePixel = 0;
+		Size = UDim2.new(2, 0, 2, 0);
+		Position = UDim2.new(1, -30, 1, -30);
+		ZIndex = 2;
+		Parent = Resizer;
+	});
+
+	local ResizerImageUICorner = Library:Create('UICorner', {
+		CornerRadius = UDim.new(0.5, 0);
+		Parent = ResizerImage;
+	});
+
+	Library:AddToRegistry(ResizerImage, { BackgroundColor3 = 'AccentColor'; });
+
+	Resizer.Size = UDim2.fromOffset(ResizerImage_Size, ResizerImage_Size);
+	Resizer.Position = UDim2.new(1, -ResizerImage_Size, 1, -ResizerImage_Size);
+	MinSize = MinSize or Library.MinSize;
+
+	local OffsetPos;
+	Resizer.Parent = Instance;
+
+	local function FinishResize(Transparency)
+		ResizerImage.Position = UDim2.new();
+		ResizerImage.Size = UDim2.new(2, 0, 2, 0);
+		ResizerImage.Parent = Resizer;
+		ResizerImage.BackgroundTransparency = Transparency;
+		ResizerImageUICorner.Parent = ResizerImage;
+		OffsetPos = nil;
+	end;
+
+	ResizerImage.MouseButton1Down:Connect(function()
+		if not OffsetPos then
+			OffsetPos = Vector2.new(Mouse.X - (Instance.AbsolutePosition.X + Instance.AbsoluteSize.X), Mouse.Y - (Instance.AbsolutePosition.Y + Instance.AbsoluteSize.Y));
+
+			ResizerImage.BackgroundTransparency = 1
+			ResizerImage.Size = UDim2.fromOffset(Library.ScreenGui.AbsoluteSize.X, Library.ScreenGui.AbsoluteSize.Y);
+			ResizerImage.Position = UDim2.new();
+			ResizerImageUICorner.Parent = nil;
+			ResizerImage.Parent = Library.ScreenGui;
+		end;
+	end);
+
+	ResizerImage.MouseMoved:Connect(function()
+		if OffsetPos then		
+			local MousePos = Vector2.new(Mouse.X - OffsetPos.X, Mouse.Y - OffsetPos.Y);
+			local FinalSize = Vector2.new(math.clamp(MousePos.X - Instance.AbsolutePosition.X, MinSize.X, math.huge), math.clamp(MousePos.Y - Instance.AbsolutePosition.Y, MinSize.Y, math.huge));
+			Instance.Size = UDim2.fromOffset(FinalSize.X, FinalSize.Y);
+		end;
+	end);
+
+	ResizerImage.MouseEnter:Connect(function()
+		FinishResize(ResizerImage_HoverTransparency);		
+	end);
+
+	ResizerImage.MouseLeave:Connect(function() 
+		FinishResize(1);
+	end);
+
+	ResizerImage.MouseButton1Up:Connect(function()
+		FinishResize(ResizerImage_HoverTransparency);
+	end);
+end;
+
+function Library:AddToolTip(InfoStr, HoverInstance)
+	local X, Y = Library:GetTextBounds(InfoStr, Library.Font, 14);
+	local Tooltip = Library:Create('Frame', {
+		BackgroundColor3 = Library.MainColor,
+		BorderColor3 = Library.OutlineColor,
+
+		Size = UDim2.fromOffset(X + 5, Y + 4),
+		ZIndex = 100,
+		Parent = Library.ScreenGui,
+
+		Visible = false,
+	});
+
+	local Label = Library:CreateLabel({
+		Position = UDim2.fromOffset(3, 1),
+		Size = UDim2.fromOffset(X, Y);
+		TextSize = 14;
+		Text = InfoStr,
+		TextColor3 = Library.FontColor,
+		TextXAlignment = Enum.TextXAlignment.Left;
+		ZIndex = Tooltip.ZIndex + 1,
+
+		Parent = Tooltip;
+	});
+
+	Library:AddToRegistry(Tooltip, {
+		BackgroundColor3 = 'MainColor';
+		BorderColor3 = 'OutlineColor';
+	});
+
+	Library:AddToRegistry(Label, {
+		TextColor3 = 'FontColor',
+	});
+
+	local IsHovering = false
+
+	HoverInstance.MouseEnter:Connect(function()
+		if Library:MouseIsOverOpenedFrame() then
+			return
+		end
+
+		IsHovering = true
+
+		Tooltip.Position = UDim2.fromOffset(Mouse.X + 15, Mouse.Y + 12)
+		Tooltip.Visible = true
+
+		while IsHovering do
+			RunService.Heartbeat:Wait()
+			Tooltip.Position = UDim2.fromOffset(Mouse.X + 15, Mouse.Y + 12)
+		end
+	end)
+
+	HoverInstance.MouseLeave:Connect(function()
+		IsHovering = false
+		Tooltip.Visible = false
+	end)
+	
+	if LibraryMainOuterFrame then
+		LibraryMainOuterFrame:GetPropertyChangedSignal("Visible"):Connect(function() 
+			if LibraryMainOuterFrame.Visible == false then
+				IsHovering = false
+				Tooltip.Visible = false
+			end
+		end)
+	end
+end
+
+function Library:OnHighlight(HighlightInstance, Instance, Properties, PropertiesDefault, condition)
+	local function undoHighlight()
+		local Reg = Library.RegistryMap[Instance];
+
+		for Property, ColorIdx in next, PropertiesDefault do
+			Instance[Property] = Library[ColorIdx] or ColorIdx;
+
+			if Reg and Reg.Properties[Property] then
+				Reg.Properties[Property] = ColorIdx;
+			end;
+		end;
+	end
+	local function doHighlight()
+		if condition and not condition() then undoHighlight() return end
+		local Reg = Library.RegistryMap[Instance];
+
+		for Property, ColorIdx in next, Properties do
+			Instance[Property] = Library[ColorIdx] or ColorIdx;
+
+			if Reg and Reg.Properties[Property] then
+				Reg.Properties[Property] = ColorIdx;
+			end;
+		end;
+	end
+
+	HighlightInstance.MouseEnter:Connect(function()
+		doHighlight()
+	end)
+	HighlightInstance.MouseMoved:Connect(function()
+		doHighlight()
+	end)
+	HighlightInstance.MouseLeave:Connect(function()
+		undoHighlight()
+	end)
+end;
+
+function Library:MouseIsOverOpenedFrame(Input)
+	local Pos = Mouse;
+	if Library.IsMobile and Input then 
+		Pos = Input.Position;
+	end;
+	for Frame, _ in next, Library.OpenedFrames do
+		local AbsPos, AbsSize = Frame.AbsolutePosition, Frame.AbsoluteSize;
+
+		if Pos.X >= AbsPos.X and Pos.X <= AbsPos.X + AbsSize.X
+			and Pos.Y >= AbsPos.Y and Pos.Y <= AbsPos.Y + AbsSize.Y then
+
+			return true;
+		end;
+	end;
+end;
+
+function Library:MouseIsOverFrame(Frame, Input)
+	local Pos = Mouse;
+	if Library.IsMobile and Input then 
+		Pos = Input.Position;
+	end;
+	local AbsPos, AbsSize = Frame.AbsolutePosition, Frame.AbsoluteSize;
+
+	if Pos.X >= AbsPos.X and Pos.X <= AbsPos.X + AbsSize.X
+		and Pos.Y >= AbsPos.Y and Pos.Y <= AbsPos.Y + AbsSize.Y then
+
+		return true;
+	end;
+end;
+
+function Library:UpdateDependencyBoxes()
+	for _, Depbox in next, Library.DependencyBoxes do
+		Depbox:Update();
+	end;
+end;
+
+function Library:MapValue(Value, MinA, MaxA, MinB, MaxB)
+	return (1 - ((Value - MinA) / (MaxA - MinA))) * MinB + ((Value - MinA) / (MaxA - MinA)) * MaxB;
+end;
+
+function Library:GetTextBounds(Text, Font, Size, Resolution)
+	local Bounds = TextService:GetTextSize(Text, Size, Font, Resolution or Vector2.new(1920, 1080))
+	return Bounds.X, Bounds.Y
+end;
+
+function Library:GetDarkerColor(Color)
+	local H, S, V = Color3.toHSV(Color);
+	return Color3.fromHSV(H, S, V / 1.5);
+end;
+Library.AccentColorDark = Library:GetDarkerColor(Library.AccentColor);
+
+function Library:AddToRegistry(Instance, Properties, IsHud)
+	local Idx = #Library.Registry + 1;
+	local Data = {
+		Instance = Instance;
+		Properties = Properties;
+		Idx = Idx;
+	};
+
+	table.insert(Library.Registry, Data);
+	Library.RegistryMap[Instance] = Data;
+
+	if IsHud then
+		table.insert(Library.HudRegistry, Data);
+	end;
+end;
+
+function Library:RemoveFromRegistry(Instance)
+	local Data = Library.RegistryMap[Instance];
+
+	if Data then
+		for Idx = #Library.Registry, 1, -1 do
+			if Library.Registry[Idx] == Data then
+				table.remove(Library.Registry, Idx);
+			end;
+		end;
+
+		for Idx = #Library.HudRegistry, 1, -1 do
+			if Library.HudRegistry[Idx] == Data then
+				table.remove(Library.HudRegistry, Idx);
+			end;
+		end;
+
+		Library.RegistryMap[Instance] = nil;
+	end;
+end;
+
+function Library:UpdateColorsUsingRegistry()
+	-- TODO: Could have an 'active' list of objects
+	-- where the active list only contains Visible objects.
+
+	-- IMPL: Could setup .Changed events on the AddToRegistry function
+	-- that listens for the 'Visible' propert being changed.
+	-- Visible: true => Add to active list, and call UpdateColors function
+	-- Visible: false => Remove from active list.
+
+	-- The above would be especially efficient for a rainbow menu color or live color-changing.
+
+	for Idx, Object in next, Library.Registry do
+		for Property, ColorIdx in next, Object.Properties do
+			if type(ColorIdx) == 'string' then
+				Object.Instance[Property] = Library[ColorIdx];
+			elseif type(ColorIdx) == 'function' then
+				Object.Instance[Property] = ColorIdx()
+			end
+		end;
+	end;
+end;
+
+function Library:GiveSignal(Signal)
+	-- Only used for signals not attached to library instances, as those should be cleaned up on object destruction by Roblox
+	table.insert(Library.Signals, Signal)
+end
+
+function Library:Unload()
+	-- Unload all of the signals
+	for Idx = #Library.Signals, 1, -1 do
+		local Connection = table.remove(Library.Signals, Idx)
+		Connection:Disconnect()
+	end
+
+	-- Call our unload callback, maybe to undo some hooks etc
+	if Library.OnUnload then
+		Library.OnUnload()
+	end
+
+	ScreenGui:Destroy()
+end
+
+function Library:OnUnload(Callback)
+	Library.OnUnload = Callback
+end
+
+Library:GiveSignal(ScreenGui.DescendantRemoving:Connect(function(Instance)
+	if Library.RegistryMap[Instance] then
+		Library:RemoveFromRegistry(Instance);
+	end;
+end))
+
+local BaseAddons = {};
+
+do
+	local Funcs = {};
+
+	function Funcs:AddColorPicker(Idx, Info)
+		local ParentObj = self
+		local ToggleLabel = self.TextLabel;
+		--local Container = self.Container;
+
+		assert(Info.Default, 'AddColorPicker: Missing default value.');
+
+		local ColorPicker = {
+			Value = Info.Default;
+			Transparency = Info.Transparency or 0;
+			Type = 'ColorPicker';
+			Title = type(Info.Title) == 'string' and Info.Title or 'Color picker',
+			Callback = Info.Callback or function(Color) end;
+		};
+
+		function ColorPicker:SetHSVFromRGB(Color)
+			local H, S, V = Color3.toHSV(Color);
+
+			ColorPicker.Hue = H;
+			ColorPicker.Sat = S;
+			ColorPicker.Vib = V;
+		end;
+
+		ColorPicker:SetHSVFromRGB(ColorPicker.Value);
+
+		local DisplayFrame = Library:Create('Frame', {
+			BackgroundColor3 = ColorPicker.Value;
+			BorderColor3 = Library:GetDarkerColor(ColorPicker.Value);
+			BorderMode = Enum.BorderMode.Inset;
+			Size = UDim2.new(0, 28, 0, 14);
+			ZIndex = 6;
+			Parent = ToggleLabel;
+		});
+
+		-- Transparency image taken from https://github.com/matas3535/SplixPrivateDrawingLibrary/blob/main/Library.lua cus i'm lazy
+		local CheckerFrame = Library:Create('ImageLabel', {
+			BorderSizePixel = 0;
+			Size = UDim2.new(0, 27, 0, 13);
+			ZIndex = 5;
+			Image = 'http://www.roblox.com/asset/?id=12977615774';
+			Visible = not not Info.Transparency;
+			Parent = DisplayFrame;
+		});
+
+		-- 1/16/23
+		-- Rewrote this to be placed inside the Library ScreenGui
+		-- There was some issue which caused RelativeOffset to be way off
+		-- Thus the color picker would never show
+
+		local PickerFrameOuter = Library:Create('Frame', {
+			Name = 'Color';
+			BackgroundColor3 = Color3.new(1, 1, 1);
+			BorderColor3 = Color3.new(0, 0, 0);
+			Position = UDim2.fromOffset(DisplayFrame.AbsolutePosition.X, DisplayFrame.AbsolutePosition.Y + 18),
+			Size = UDim2.fromOffset(230, Info.Transparency and 271 or 253);
+			Visible = false;
+			ZIndex = 15;
+			Parent = ScreenGui,
+		});
+
+		DisplayFrame:GetPropertyChangedSignal('AbsolutePosition'):Connect(function()
+			PickerFrameOuter.Position = UDim2.fromOffset(DisplayFrame.AbsolutePosition.X, DisplayFrame.AbsolutePosition.Y + 18);
+		end)
+
+		local PickerFrameInner = Library:Create('Frame', {
+			BackgroundColor3 = Library.BackgroundColor;
+			BorderColor3 = Library.OutlineColor;
+			BorderMode = Enum.BorderMode.Inset;
+			Size = UDim2.new(1, 0, 1, 0);
+			ZIndex = 16;
+			Parent = PickerFrameOuter;
+		});
+
+		local Highlight = Library:Create('Frame', {
+			BackgroundColor3 = Library.AccentColor;
+			BorderSizePixel = 0;
+			Size = UDim2.new(1, 0, 0, 2);
+			ZIndex = 17;
+			Parent = PickerFrameInner;
+		});
+
+		local SatVibMapOuter = Library:Create('Frame', {
+			BorderColor3 = Color3.new(0, 0, 0);
+			Position = UDim2.new(0, 4, 0, 25);
+			Size = UDim2.new(0, 200, 0, 200);
+			ZIndex = 17;
+			Parent = PickerFrameInner;
+		});
+
+		local SatVibMapInner = Library:Create('Frame', {
+			BackgroundColor3 = Library.BackgroundColor;
+			BorderColor3 = Library.OutlineColor;
+			BorderMode = Enum.BorderMode.Inset;
+			Size = UDim2.new(1, 0, 1, 0);
+			ZIndex = 18;
+			Parent = SatVibMapOuter;
+		});
+
+		local SatVibMap = Library:Create('ImageLabel', {
+			BorderSizePixel = 0;
+			Size = UDim2.new(1, 0, 1, 0);
+			ZIndex = 18;
+			Image = 'rbxassetid://4155801252';
+			Parent = SatVibMapInner;
+		});
+
+		local CursorOuter = Library:Create('ImageLabel', {
+			AnchorPoint = Vector2.new(0.5, 0.5);
+			Size = UDim2.new(0, 6, 0, 6);
+			BackgroundTransparency = 1;
+			Image = 'http://www.roblox.com/asset/?id=9619665977';
+			ImageColor3 = Color3.new(0, 0, 0);
+			ZIndex = 19;
+			Parent = SatVibMap;
+		});
+
+		local CursorInner = Library:Create('ImageLabel', {
+			Size = UDim2.new(0, CursorOuter.Size.X.Offset - 2, 0, CursorOuter.Size.Y.Offset - 2);
+			Position = UDim2.new(0, 1, 0, 1);
+			BackgroundTransparency = 1;
+			Image = 'http://www.roblox.com/asset/?id=9619665977';
+			ZIndex = 20;
+			Parent = CursorOuter;
+		})
+
+		local HueSelectorOuter = Library:Create('Frame', {
+			BorderColor3 = Color3.new(0, 0, 0);
+			Position = UDim2.new(0, 208, 0, 25);
+			Size = UDim2.new(0, 15, 0, 200);
+			ZIndex = 17;
+			Parent = PickerFrameInner;
+		});
+
+		local HueSelectorInner = Library:Create('Frame', {
+			BackgroundColor3 = Color3.new(1, 1, 1);
+			BorderSizePixel = 0;
+			Size = UDim2.new(1, 0, 1, 0);
+			ZIndex = 18;
+			Parent = HueSelectorOuter;
+		});
+
+		local HueCursor = Library:Create('Frame', { 
+			BackgroundColor3 = Color3.new(1, 1, 1);
+			AnchorPoint = Vector2.new(0, 0.5);
 			BorderColor3 = Color3.new(0, 0, 0);
 			Size = UDim2.new(1, 0, 0, 1);
 			ZIndex = 18;
