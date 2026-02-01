@@ -29,11 +29,12 @@ local create_drawing = function(type, props)
     return a;
 end;
 
+local cache = {};
 local player_esp = {} do
     player_esp.__index = player_esp;
-    player_esp.cache = {}
+    
     player_esp.new = function(model, char)
-        if (player_esp.cache[model]) then return end;
+        if (cache[model]) then return end;
                 
         local self = setmetatable({
             ["model"] = model,
@@ -63,12 +64,12 @@ local player_esp = {} do
         self.drawings["weapon"] = create_drawing("Text", {Visible = false, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Color = Color3.fromRGB(255, 255, 255), Transparency = 1, Size = 10, Text = "None", Font = 2, ZIndex = 1});
         self.drawings["name"] = create_drawing("Text", {Visible = false, Center = true, Outline = true, OutlineColor = Color3.fromRGB(0, 0, 0), Color = Color3.fromRGB(255, 255, 255), Transparency = 1, Size = 10, Text = char.Name, Font = 2, ZIndex = 1});
 
-        self.cache[model] = self;
+        cache[model] = self;
         return self;
     end;
     
     function player_esp:Remove()
-        self.cache[self.model] = nil;
+        cache[self.model] = nil;
         
         for i = 1, #self.connections do
             self.connections[i]:Disconnect();
@@ -81,6 +82,10 @@ local player_esp = {} do
         for i = 1, #self.adornments do
             self.adornments[i]:Destroy();
         end;
+    end;
+    
+    function player_esp:GetCache()
+        return cache;
     end;
     
     function player_esp:Update(settings)
