@@ -2192,7 +2192,7 @@ do
 			Type = 'Slider';
 			Callback = Info.Callback or function(Value) end;
 		};
-
+		Library.Flags[Idx] = Slider.Value;
 		local Groupbox = self;
 		local Container = Groupbox.Container;
 
@@ -2350,7 +2350,7 @@ do
 
 			Slider.Value = Num;
 			Slider:Display();
-
+			Library.Flags[Idx] = Slider.Value;
 			Library:SafeCallback(Slider.Callback, Slider.Value);
 			Library:SafeCallback(Slider.Changed, Slider.Value);
 		end;
