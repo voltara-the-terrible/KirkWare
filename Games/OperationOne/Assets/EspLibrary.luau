@@ -72,7 +72,7 @@ local player_esp = {cache = {}} do
         local point, on = world_to_point(head.Position);
         self.screen_pos = point;
         self.on_screen = on;
-        if (not on) then return self:Hidedrawings() end;
+        if (not on or not settings.enabled) then return self:Hidedrawings() end;
         
         local top, bottom, left, right = self:GetBoundingBox();
         if (not top) then return self:Hidedrawings() end;
