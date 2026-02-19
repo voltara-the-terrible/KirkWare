@@ -12,6 +12,8 @@ local world_to_point = function(pos)
 end;
 
 module.new = function(model, char)
+    if (cache[model]) then return end;
+
     local self = setmetatable({
         model    = model,
         char     = char,
