@@ -20,7 +20,8 @@ module.new = function(model, char)
         children = {},
         connections = {},
         on_screen = false,
-        screen_pos = Vector2.new(math.huge, math.huge)
+        screen_pos = Vector2.new(math.huge, math.huge),
+        distance = math.huge
     }, module);
 
     local children = model:GetChildren();
@@ -53,6 +54,8 @@ module.update = function(self, settings)
     self.on_screen = on;
 
     if (not on or not settings.enabled) then return self:hide() end;
+
+    self.distance = (camera.CFrame.Position - head.CFrame.Position).Magnitude;
 
 end;
 
