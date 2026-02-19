@@ -2444,6 +2444,7 @@ do
 			Value = Info.Multi and {};
 			Multi = Info.Multi;
 			Type = 'Dropdown';
+            flag_name = Idx,
 			SpecialType = Info.SpecialType; -- can be either 'Player' or 'Team'
 			Callback = Info.Callback or function(Value) end;
 		};
@@ -2737,7 +2738,7 @@ do
 							
 							Library:UpdateDependencyBoxes();
 							
-							Library.Flags[Idx] = Dropdown.Value;
+							Library.Flags[Dropdown.flag_name] = Dropdown.Value;
 							Library:SafeCallback(Dropdown.Callback, Dropdown.Value);
 							Library:SafeCallback(Dropdown.Changed, Dropdown.Value);
 
@@ -2818,7 +2819,7 @@ do
 			end;
 
 			Dropdown:BuildDropdownList();
-            Library.Flags[Idx] = Dropdown.Value;
+            Library.Flags[Dropdown.flag_name] = Dropdown.Value;
 			Library:SafeCallback(Dropdown.Callback, Dropdown.Value);
 			Library:SafeCallback(Dropdown.Changed, Dropdown.Value);
 		end;
@@ -2873,7 +2874,6 @@ do
 					Dropdown.Value[Dropdown.Values[Index]] = true
 				else
 					Dropdown.Value = Dropdown.Values[Index];
-					Library.Flags[Idx] = Dropdown.Value
 				end
 
 				if (not Info.Multi) then break end
