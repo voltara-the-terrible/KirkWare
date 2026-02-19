@@ -2885,7 +2885,7 @@ do
 
 		Groupbox:AddBlank(Info.BlankSize or 5);
 		Groupbox:Resize();
-
+        Library.Flags[Dropdown.flag_name] = Dropdown.Value;
 		Options[Idx] = Dropdown;
 
 		return Dropdown;
