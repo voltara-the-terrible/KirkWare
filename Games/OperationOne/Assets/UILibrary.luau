@@ -119,7 +119,7 @@ local function GetTeamsString()
 	
 	return TeamList;
 end;
-while true do end;
+--while true do end;
 function Library:SafeCallback(f, ...)
 	if (not f) then
 		return;
